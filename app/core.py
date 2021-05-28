@@ -61,11 +61,11 @@ class Player_Stats(Core_Methods):
 
         return status
 
-    def reg_user(self, chat_id):
+    def reg_user(self, new_user):
 
         db = App_Db()
-        new_user = ([self.user_name, self.user_id, 0, chat_id])
-        db.user_registration(new_user)
+        user = (new_user)
+        db.user_registration(user)
 
     def del_user(self):
 

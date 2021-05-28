@@ -1,3 +1,4 @@
+from re import M
 import config
 import telebot
 from telebot import types
@@ -42,7 +43,7 @@ def help_message(message):
     button_active_user = types.InlineKeyboardButton(text="Статистика игроков", callback_data="remove_clan")
     button_start_game = types.InlineKeyboardButton(text="Начать игру", callback_data="remove_clan")
     button_del = types.InlineKeyboardButton(text="Удалить клан", callback_data="remove_clan")
-    button_del_user = types.InlineKeyboardButton(text="Удалить клан", callback_data="remove_clan")
+    button_del_user = types.InlineKeyboardButton(text="Удалить юзера", callback_data="remove_user")
     keyboard.add(button_reg, button_reg_user, button_active_user, button_start_game, button_del, button_del_user)
     
     bot.send_message(message.chat.id, "Правила игры", reply_markup=keyboard)
@@ -51,6 +52,7 @@ def help_message(message):
 #Обработка нажатия кнопки "Зарегистрировать клан"
 @bot.callback_query_handler(func=lambda call: call.data == "add_clan")
 def add_clan(call):
+
     #Вызываем класс Чат
     this_chat = core.Clan_Stats(call.message)
     #Проверяем БД на наличие чата с таким id
@@ -65,9 +67,11 @@ def add_clan(call):
         bot.delete_message(call.message.chat.id, call.message.message_id)
 
 
+
 #Обработка нажатия кнопки "Зарегистрировать юзера"
 @bot.callback_query_handler(func=lambda call: call.data == "add_user")
 def add_clan(call):
+
     #Вызываем класс Чат
     this_chat = core.Clan_Stats(call.message)
     #Проверяем БД на наличие чата с таким id
@@ -84,7 +88,8 @@ def add_clan(call):
 
         #Если проверка вернула нам пустой масив, регистриуем юзера
         if not check_user:
-            this_user.reg_user(check_chat[0][0])
+            new_user = [call.from_user.first_name, call.from_user.id, 0, check_chat[0][0]]
+            this_user.reg_user(new_user)
             bot.send_message(call.message.chat.id, "Регистрация юзера под ником {} произошла успешно".format(str(call.from_user.first_name)))
         else:
             bot.send_message(call.message.chat.id, "Юзер уже зарегестрирован")
@@ -145,7 +150,40 @@ def active_user(call):
 @bot.message_handler(content_types=['text', 'photo', 'voice', 'audio', 'document'])
 def check_chat_message(message):
 
-    pass
+    #Вызываем класс User
+    this_user = core.Player_Stats(message)
+    #Проверяем БД на наличие юзера с таким id
+    check_user = this_user.check_players()
+
+    #Если проверка вернула нам пустой масив, регистриуем юзера
+    if not check_user:
+
+        return
+    
+    else:
+
+        like = 0
+
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
+        keyboard.add(button_like)
+
+        bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=message.message_id)
+        bot.send_message(message.chat.id, "Поддержи друга {} лайком".format(message.from_user.first_name), reply_markup=keyboard)
+
+
+#Обработка нажатия кнопки "Начать игру"
+@bot.callback_query_handler(func=lambda call: call.data == "add_like")
+def add_like(call):
+
+    print(call)
+    return
+
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    button_like = types.InlineKeyboardButton(text="Поставить лайк {} ❤️".format(str(like)), callback_data="add_like")
+    keyboard.add(button_like)
+
+    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=keyboard)
 
 
 #Запуск функции опрашивающей сервер Telegram
