@@ -1,4 +1,4 @@
-from re import M
+import json
 import config
 import telebot
 from telebot import types
@@ -176,11 +176,12 @@ def check_chat_message(message):
 @bot.callback_query_handler(func=lambda call: call.data == "add_like")
 def add_like(call):
 
-    print(call)
-    return
+    #Выбираем из JSON файла
+    like = call.message.json["reply_markup"]["inline_keyboard"][0][0]["text"].split("❤️")[1]
+    like = int(like) + 1
 
     keyboard = types.InlineKeyboardMarkup(row_width=1)
-    button_like = types.InlineKeyboardButton(text="Поставить лайк {} ❤️".format(str(like)), callback_data="add_like")
+    button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
     keyboard.add(button_like)
 
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=keyboard)
