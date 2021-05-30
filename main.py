@@ -1,4 +1,5 @@
 import json
+from logging import basicConfig
 import config
 import telebot
 from telebot import types
@@ -14,13 +15,15 @@ bot = telebot.TeleBot(config.TOKEN)
 def reg_chat(message):
 
     if message.new_chat_members[0].id == bot.get_me().id:
-        #Вызываем класс Чат
-        this_chat = core.Clan_Stats(message)
+
+        #Вызываем класс с базовыми методами приложения
+        basic_methods = core.Core_Methods("chat", message.chat.id)
         #Проверяем БД на наличие чата с таким id
-        check_chat = this_chat.check_chats()
+        check_chat = basic_methods.check_obj()
         #Если проверка вернула нам пустой масив, регистриуем чат
         if not check_chat:
-            this_chat.reg_clan()
+            new_clan = [message.chat.title, message.chat.id, 0]
+            basic_methods.reg_obj(new_clan)
             bot.send_message(message.chat.id, "Для полноценного функционирования игры, дайте боту ПРАВА АДМИНИСТРАТОРА")
         else:
             bot.send_message(message.chat.id, "Клан уже зарегестрирован")
@@ -53,13 +56,14 @@ def help_message(message):
 @bot.callback_query_handler(func=lambda call: call.data == "add_clan")
 def add_clan(call):
 
-    #Вызываем класс Чат
-    this_chat = core.Clan_Stats(call.message)
+    #Вызываем класс с базовыми методами приложения
+    basic_methods = core.Core_Methods("chat", call.message.chat.id)
     #Проверяем БД на наличие чата с таким id
-    check_chat = this_chat.check_chats()
+    check_chat = basic_methods.check_obj()
     #Если проверка вернула нам пустой масив, регистриуем чат
     if not check_chat:
-        this_chat.reg_clan()
+        new_clan = [call.message.chat.title, call.message.chat.id, 0]
+        basic_methods.reg_obj(new_clan)
         bot.send_message(call.message.chat.id, "Для полноценного функционирования игры, дайте боту ПРАВА АДМИНИСТРАТОРА")
         bot.delete_message(call.message.chat.id, call.message.message_id)
     else:
@@ -70,26 +74,26 @@ def add_clan(call):
 
 #Обработка нажатия кнопки "Зарегистрировать юзера"
 @bot.callback_query_handler(func=lambda call: call.data == "add_user")
-def add_clan(call):
+def add_user(call):
 
-    #Вызываем класс Чат
-    this_chat = core.Clan_Stats(call.message)
+    #Вызываем класс с базовыми методами приложения
+    basic_methods = core.Core_Methods("chat", call.message.chat.id)
     #Проверяем БД на наличие чата с таким id
-    check_chat = this_chat.check_chats()
+    check_chat = basic_methods.check_obj()
     #Если проверка вернула нам пустой масив, регистриуем чат
     if not check_chat:
         bot.send_message(call.message.chat.id, "Для того что бы регистрировать юзера, не обходимо что б от вашего чата должен быть зарегестрирован клан.")
         bot.delete_message(call.message.chat.id, call.message.message_id)
     else:
-        #Вызываем класс User
-        this_user = core.Player_Stats(call.message)
+        #Вызываем класс с базовыми методами приложения
+        basic_methods_user = core.Core_Methods("user", call.from_user.id)
         #Проверяем БД на наличие юзера с таким id
-        check_user = this_user.check_players()
+        check_user = basic_methods_user.check_obj()
 
         #Если проверка вернула нам пустой масив, регистриуем юзера
         if not check_user:
             new_user = [call.from_user.first_name, call.from_user.id, 0, check_chat[0][0]]
-            this_user.reg_user(new_user)
+            basic_methods_user.reg_obj(new_user)
             bot.send_message(call.message.chat.id, "Регистрация юзера под ником {} произошла успешно".format(str(call.from_user.first_name)))
         else:
             bot.send_message(call.message.chat.id, "Юзер уже зарегестрирован")
@@ -100,17 +104,17 @@ def add_clan(call):
 #Обработка нажатия кнопки "Удалить клан"
 @bot.callback_query_handler(func=lambda call: call.data == "remove_clan")
 def remove_clan(call):
-    #Вызываем класс Чат
-    this_chat = core.Clan_Stats(call.message)
+    
+    #Вызываем класс с базовыми методами приложения
+    basic_methods = core.Core_Methods("chat", call.message.chat.id)
     #Проверяем БД на наличие чата с таким id
-    check_chat = this_chat.check_chats()
+    check_chat = basic_methods.check_obj()
     #Если проверка вернула нам пустой масив, регистриуем чат
     if not check_chat:
-        this_chat.reg_clan()
         bot.send_message(call.message.chat.id, "Ваш чат не зарегистрирован как клан в игре 'Clan Wars'")
         bot.delete_message(call.message.chat.id, call.message.message_id)
     else:
-        this_chat.del_clan()
+        basic_methods.del_obj()
         bot.send_message(call.message.chat.id, "Клан успешно удалён")
         bot.delete_message(call.message.chat.id, call.message.message_id)
 
@@ -119,16 +123,17 @@ def remove_clan(call):
 #Обработка нажатия кнопки "Удалить юзера"
 @bot.callback_query_handler(func=lambda call: call.data == "remove_user")
 def remove_user(call):
-    #Вызываем класс User
-    this_user = core.Player_Stats(call.message)
+    
+    #Вызываем класс с базовыми методами приложения
+    basic_methods = core.Core_Methods("user", call.from_user.id)
     #Проверяем БД на наличие юзера с таким id
-    check_user = this_user.check_players()
+    check_user = basic_methods.check_obj()
 
     #Если проверка вернула нам пустой масив, регистриуем юзера
     if not check_user:
         bot.send_message(call.message.chat.id, "У вас нет зарегистрированного юзера")
     else:
-        this_user.del_user()
+        basic_methods.del_obj()
         bot.send_message(call.message.chat.id, "Юзер успешно удалён")
 
     bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -150,10 +155,10 @@ def active_user(call):
 @bot.message_handler(content_types=['text', 'photo', 'voice', 'audio', 'document'])
 def check_chat_message(message):
 
-    #Вызываем класс User
-    this_user = core.Player_Stats(message)
+    #Вызываем класс с базовыми методами приложения
+    basic_methods = core.Core_Methods("user", message.from_user.id)
     #Проверяем БД на наличие юзера с таким id
-    check_user = this_user.check_players()
+    check_user = basic_methods.check_obj()
 
     #Если проверка вернула нам пустой масив, регистриуем юзера
     if not check_user:

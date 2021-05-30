@@ -1,97 +1,55 @@
-from re import A
 from .database import App_Db
 
 
 #Клас содержащий в себе все базовые методы для работы приложения
 class Core_Methods:
 
-    def __init__(self, data):
+    def __init__(self, target, data):
 
-        self.user_id = data.from_user.id
-        self.user_name = data.from_user.first_name
-        self.chat_id = data.chat.id
-        self.chat_title = data.chat.title
+        self.target = target
+        self.data = data
 
-    #Возвращает user_id
-    def get_user_id(self):
-
-        return self.user_id
-
-    #Возвращает chat_id
-    def get_chat_id(self):
-
-        return self.chat_id
-
-    #Возвращает user_name
-    def get_user_name(self):
-
-        return self.user_name
-
-    #Возвращает chat_name
-    def get_chat_title(self):
-
-        return self.chat_title
-
-    #Возвращает объект user, если он есть в БД
-    def check_players(self):
+    #Возвращает объект по его ID, если он есть в БД
+    def check_obj(self):
 
         db  = App_Db()
-        res = db.get_user(self.user_id)
-        return res
 
-    #Возвращает объект clan, если он есть в БД
-    def check_chats(self):
+        if self.target == "chat":
 
-        db  = App_Db()
-        res = db.get_chat(self.chat_id)
-        return res
+            res = db.get_chat(self.data)
+            return res
 
+        elif self.target == "user":
 
+            res = db.get_user(self.data)
+            return res
+            
 
-#Класс для обработки объектов user
-class Player_Stats(Core_Methods):
-
-    def __init__(self, data):
-
-        super().__init__(data)
-
-    def get_player_stat(self):
-
-        status = self.check_players()
-
-        return status
-
-    def reg_user(self, new_user):
+    #Регистрирует объект в БД      
+    def reg_obj(self, reg_object):
 
         db = App_Db()
-        user = (new_user)
-        db.user_registration(user)
 
-    def del_user(self):
+        if self.target == "chat":
 
+            clan = (reg_object)
+            db.clan_registration(clan)
+
+        elif self.target == "user":
+
+            user = (reg_object)
+            db.user_registration(user)
+
+
+    #Удаляем объект из БД
+    def del_obj(self):
+        
         db = App_Db()
-        db.delete_user(self.user_id)
+        
+        if self.target == "chat":
 
+            db.delete_clan(self.data)
 
+        elif self.target == "user":
 
-#Класс для обработки объектов clan
-class Clan_Stats(Core_Methods):
-
-    def __init__(self, data):
-        super().__init__(data)
-
-    def get_chat_stat(self):
-
-        status = self.check_chats()
-        return status
-
-    def reg_clan(self):
-
-        db = App_Db()
-        new_chat = ([self.chat_title, self.chat_id, 0])
-        db.clan_registration(new_chat)
-
-    def del_clan(self):
-
-        db = App_Db()
-        db.delete_clan(self.chat_id)
+            db.delete_user(self.data)
