@@ -53,3 +53,5 @@ class Core_Methods:
         elif self.target == "user":
 
             db.delete_user(self.data)
+
+

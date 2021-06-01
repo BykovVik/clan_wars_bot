@@ -1,5 +1,4 @@
-import json
-from logging import basicConfig
+import time
 import config
 import telebot
 from telebot import types
@@ -32,24 +31,37 @@ def reg_chat(message):
 #Обработка команды /help
 @bot.message_handler(commands=['help'])
 def help_message(message):
+
+    if message.chat.type == 'private':
     
-    bot.send_message(message.chat.id, "Правила игры")
+        bot.send_message(message.chat.id, "Бот работает исключительно в чате")
+
+    else:
+
+        bot.send_message(message.chat.id, "Правила игры")
+
 
 
 #Обработка команды /start
 @bot.message_handler(commands=['start'])
 def help_message(message):
 
-    keyboard = types.InlineKeyboardMarkup(row_width=1)
-    button_reg = types.InlineKeyboardButton(text="Зарегистрировать клан", callback_data="add_clan")
-    button_reg_user = types.InlineKeyboardButton(text="Зарегистрировать юзера", callback_data="add_user")
-    button_active_user = types.InlineKeyboardButton(text="Статистика игроков", callback_data="remove_clan")
-    button_start_game = types.InlineKeyboardButton(text="Начать игру", callback_data="remove_clan")
-    button_del = types.InlineKeyboardButton(text="Удалить клан", callback_data="remove_clan")
-    button_del_user = types.InlineKeyboardButton(text="Удалить юзера", callback_data="remove_user")
-    keyboard.add(button_reg, button_reg_user, button_active_user, button_start_game, button_del, button_del_user)
+    if message.chat.type == 'private':
     
-    bot.send_message(message.chat.id, "Правила игры", reply_markup=keyboard)
+        bot.send_message(message.chat.id, "Бот работает исключительно в чате")
+
+    else:
+
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        button_reg = types.InlineKeyboardButton(text="Зарегистрировать клан", callback_data="add_clan")
+        button_reg_user = types.InlineKeyboardButton(text="Зарегистрировать юзера", callback_data="add_user")
+        button_active_user = types.InlineKeyboardButton(text="Статистика игроков", callback_data="remove_clan")
+        button_start_game = types.InlineKeyboardButton(text="Начать игру", callback_data="remove_clan")
+        button_del = types.InlineKeyboardButton(text="Удалить клан", callback_data="remove_clan")
+        button_del_user = types.InlineKeyboardButton(text="Удалить юзера", callback_data="remove_user")
+        keyboard.add(button_reg, button_reg_user, button_active_user, button_start_game, button_del, button_del_user)
+        
+        bot.send_message(message.chat.id, "Правила игры", reply_markup=keyboard)
 
 
 #Обработка нажатия кнопки "Зарегистрировать клан"
@@ -123,7 +135,7 @@ def remove_clan(call):
 #Обработка нажатия кнопки "Удалить юзера"
 @bot.callback_query_handler(func=lambda call: call.data == "remove_user")
 def remove_user(call):
-    
+
     #Вызываем класс с базовыми методами приложения
     basic_methods = core.Core_Methods("user", call.from_user.id)
     #Проверяем БД на наличие юзера с таким id
@@ -142,12 +154,14 @@ def remove_user(call):
 #Обработка нажатия кнопки "Статистика игроков"
 @bot.callback_query_handler(func=lambda call: call.data == "active_user")
 def active_user(call):
+    
     pass
 
 
 #Обработка нажатия кнопки "Начать игру"
 @bot.callback_query_handler(func=lambda call: call.data == "start_game")
 def active_user(call):
+
     pass
 
 
@@ -155,26 +169,48 @@ def active_user(call):
 @bot.message_handler(content_types=['text', 'photo', 'voice', 'audio', 'document'])
 def check_chat_message(message):
 
-    #Вызываем класс с базовыми методами приложения
-    basic_methods = core.Core_Methods("user", message.from_user.id)
-    #Проверяем БД на наличие юзера с таким id
-    check_user = basic_methods.check_obj()
-
-    #Если проверка вернула нам пустой масив, регистриуем юзера
-    if not check_user:
-
-        return
+    if message.chat.type == 'private':
     
+        bot.send_message(message.chat.id, "Бот работает исключительно в чате")
+
     else:
 
-        like = 0
+        #Вызываем класс с базовыми методами приложения
+        basic_methods = core.Core_Methods("user", message.from_user.id)
+        #Проверяем БД на наличие юзера с таким id
+        check_user = basic_methods.check_obj()
 
-        keyboard = types.InlineKeyboardMarkup(row_width=1)
-        button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
-        keyboard.add(button_like)
+        #Если проверка вернула нам пустой масив, регистриуем юзера
+        if not check_user:
 
-        bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=message.message_id)
-        bot.send_message(message.chat.id, "Поддержи друга {} лайком".format(message.from_user.first_name), reply_markup=keyboard)
+            return
+        
+        else:
+
+            like = 0
+
+            keyboard = types.InlineKeyboardMarkup(row_width=1)
+            button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
+            keyboard.add(button_like)
+
+            forw_mes = bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=message.message_id)
+            send_mes = bot.send_message(message.chat.id, "Поддержи друга {} лайком".format(message.from_user.first_name), reply_markup=keyboard)
+
+            start = time.monotonic()
+
+            while True:
+
+                if time.monotonic() - start > 20:
+
+                    try:
+
+                        bot.delete_message(message.chat.id, forw_mes.id)
+                        bot.delete_message(message.chat.id, send_mes.id)
+
+                    except:
+
+                        print("Отработал таймер на Лайк Боксе")
+                        return
 
 
 #Обработка нажатия кнопки "Начать игру"
@@ -194,6 +230,7 @@ def add_like(call):
 
 #Запуск функции опрашивающей сервер Telegram
 if __name__ == "__main__":
+    
     try:
         bot.polling(none_stop=True)
     except Exception as e:
