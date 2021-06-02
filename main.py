@@ -1,5 +1,6 @@
 from os import link
 import time
+import random
 import config
 import telebot
 from telebot import types
@@ -172,69 +173,70 @@ def active_user(call):
 @async_dec()
 def check_chat_message(message):
 
+    #Если человек пишет боту в личные сообщения
     if message.chat.type == 'private':
     
-        bot.send_message(message.chat.id, "Бот работает исключительно в чате")
+        return
 
-    else:
+    #Вызываем класс с базовыми методами приложения
+    basic_methods = core.Core_Methods("user", message.from_user.id)
+    #Проверяем БД на наличие юзера с таким id
+    check_user = basic_methods.check_obj()
 
-        #Вызываем класс с базовыми методами приложения
-        basic_methods = core.Core_Methods("user", message.from_user.id)
-        #Проверяем БД на наличие юзера с таким id
-        check_user = basic_methods.check_obj()
+    #Если проверка вернула нам пустой масив - завершаем функцию
+    if not check_user:
 
-        #Если проверка вернула нам пустой масив, регистриуем юзера
-        if not check_user:
+        return
 
-            return
-        
-        else:
+    chat = core.Clans(message.chat.id)
+    chat_status = chat.get_active_status()
 
-            chat = core.Clans(message.chat.id)
-            chat_status = chat.get_active_status()
+    #Если активность чата не нулевая - завершаем функцию
+    if chat_status != 0:
 
-            if chat_status == 0:
+        return
 
-                like = 0
-                chat.active_status_change(True)
+    random_num = random.randint(1, config.LIKE_BOX_RANDOM_MAX)
 
-                keyboard = types.InlineKeyboardMarkup(row_width=1)
-                button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
-                keyboard.add(button_like)
+    if random_num != 1:
 
-                forw_mes = bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=message.message_id)
+        return
 
-                send_mes = bot.send_message(message.chat.id, "Поддержи друга {} лайком".format(message.from_user.first_name), reply_markup=keyboard)
+    like = 0
+    chat.active_status_change(True)
 
-                start = time.monotonic()
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+    button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
+    keyboard.add(button_like)
 
-                while True:
+    forw_mes = bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=message.message_id)
 
-                    if time.monotonic() - start > 20:
+    send_mes = bot.send_message(message.chat.id, "Поддержи друга {} лайком".format(message.from_user.first_name), reply_markup=keyboard)
 
-                        chat.active_status_change(False)
+    start = time.monotonic()
 
-                        try:
+    while True:
 
-                            bot.delete_message(message.chat.id, forw_mes.id)
-                            bot.delete_message(message.chat.id, send_mes.id)
+        if time.monotonic() - start > 20:
 
-                        except:
+            chat.active_status_change(False)
 
-                            print("Отработал таймер на Лайк Боксе")
-                            return
+            try:
 
-            else:
+                bot.delete_message(message.chat.id, forw_mes.id)
+                bot.delete_message(message.chat.id, send_mes.id)
 
+            except:
+
+                print("Отработал таймер на Лайк Боксе")
                 return
+
 
 
 #Обработка нажатия кнопки лайка
 @bot.callback_query_handler(func=lambda call: call.data == "add_like")
 def add_like(call):
-
-    print("Работает")
-
+    
     #Выбираем из JSON файла
     like = call.message.json["reply_markup"]["inline_keyboard"][0][0]["text"].split("❤️")[1]
     like = int(like) + 1
