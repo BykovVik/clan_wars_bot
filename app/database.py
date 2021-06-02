@@ -22,9 +22,16 @@ class App_Db:
 
     def clan_registration(self, new_chat):
 
-        self.cursor.execute("INSERT INTO clans(chat_name, chat_id, chat_item) VALUES(%s, %s, %s)", new_chat)
+        self.cursor.execute("INSERT INTO clans(chat_name, chat_id, chat_item, chat_active) VALUES(%s, %s, %s, %s)", new_chat)
         self.conn.commit()
         self.conn.close()
+
+
+
+    def update_status_clan(self, up_clan):
+
+        self.cursor.execute("UPDATE clans SET chat_active=%s WHERE chat_id=%s", (up_clan))
+        self.conn.commit()
 
 
 
@@ -38,7 +45,7 @@ class App_Db:
 
     def get_chat(self, chat_id):
 
-        self.cursor.execute("SELECT id, chat_name, chat_id, chat_item FROM clans WHERE chat_id={}".format(str(chat_id)))
+        self.cursor.execute("SELECT id, chat_name, chat_id, chat_item, chat_active FROM clans WHERE chat_id={}".format(str(chat_id)))
         res = self.cursor.fetchall()
         self.conn.close()
 

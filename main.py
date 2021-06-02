@@ -1,7 +1,9 @@
+from os import link
 import time
 import config
 import telebot
 from telebot import types
+from telebot.util import async_dec
 from app import core
 
 
@@ -21,7 +23,7 @@ def reg_chat(message):
         check_chat = basic_methods.check_obj()
         #Если проверка вернула нам пустой масив, регистриуем чат
         if not check_chat:
-            new_clan = [message.chat.title, message.chat.id, 0]
+            new_clan = [message.chat.title, message.chat.id, 0, False]
             basic_methods.reg_obj(new_clan)
             bot.send_message(message.chat.id, "Для полноценного функционирования игры, дайте боту ПРАВА АДМИНИСТРАТОРА")
         else:
@@ -74,7 +76,7 @@ def add_clan(call):
     check_chat = basic_methods.check_obj()
     #Если проверка вернула нам пустой масив, регистриуем чат
     if not check_chat:
-        new_clan = [call.message.chat.title, call.message.chat.id, 0]
+        new_clan = [call.message.chat.title, call.message.chat.id, 0, False]
         basic_methods.reg_obj(new_clan)
         bot.send_message(call.message.chat.id, "Для полноценного функционирования игры, дайте боту ПРАВА АДМИНИСТРАТОРА")
         bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -167,6 +169,7 @@ def active_user(call):
 
 #Обработка сообщений чата
 @bot.message_handler(content_types=['text', 'photo', 'voice', 'audio', 'document'])
+@async_dec()
 def check_chat_message(message):
 
     if message.chat.type == 'private':
@@ -187,35 +190,50 @@ def check_chat_message(message):
         
         else:
 
-            like = 0
+            chat = core.Clans(message.chat.id)
+            chat_status = chat.get_active_status()
 
-            keyboard = types.InlineKeyboardMarkup(row_width=1)
-            button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
-            keyboard.add(button_like)
+            if chat_status == 0:
 
-            forw_mes = bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=message.message_id)
-            send_mes = bot.send_message(message.chat.id, "Поддержи друга {} лайком".format(message.from_user.first_name), reply_markup=keyboard)
+                like = 0
+                chat.active_status_change(True)
 
-            start = time.monotonic()
+                keyboard = types.InlineKeyboardMarkup(row_width=1)
+                button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
+                keyboard.add(button_like)
 
-            while True:
+                forw_mes = bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=message.message_id)
 
-                if time.monotonic() - start > 20:
+                send_mes = bot.send_message(message.chat.id, "Поддержи друга {} лайком".format(message.from_user.first_name), reply_markup=keyboard)
 
-                    try:
+                start = time.monotonic()
 
-                        bot.delete_message(message.chat.id, forw_mes.id)
-                        bot.delete_message(message.chat.id, send_mes.id)
+                while True:
 
-                    except:
+                    if time.monotonic() - start > 20:
 
-                        print("Отработал таймер на Лайк Боксе")
-                        return
+                        chat.active_status_change(False)
+
+                        try:
+
+                            bot.delete_message(message.chat.id, forw_mes.id)
+                            bot.delete_message(message.chat.id, send_mes.id)
+
+                        except:
+
+                            print("Отработал таймер на Лайк Боксе")
+                            return
+
+            else:
+
+                return
 
 
-#Обработка нажатия кнопки "Начать игру"
+#Обработка нажатия кнопки лайка
 @bot.callback_query_handler(func=lambda call: call.data == "add_like")
 def add_like(call):
+
+    print("Работает")
 
     #Выбираем из JSON файла
     like = call.message.json["reply_markup"]["inline_keyboard"][0][0]["text"].split("❤️")[1]
@@ -226,6 +244,15 @@ def add_like(call):
     keyboard.add(button_like)
 
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=keyboard)
+
+    exit_like_box(call)
+
+
+def exit_like_box(call):
+
+    bot.answer_callback_query(call.id)
+    return
+
 
 
 #Запуск функции опрашивающей сервер Telegram

@@ -55,3 +55,25 @@ class Core_Methods:
             db.delete_user(self.data)
 
 
+
+class Clans:
+
+    def __init__(self, chat_id):
+        
+        self.chat_id = chat_id
+
+
+    def get_active_status(self):
+
+        db = App_Db()
+        res = db.get_chat(self.chat_id)
+
+        return res[0][4]
+
+
+    def active_status_change(self, status):
+
+        db = App_Db()
+        up_status = [status, self.chat_id]
+        db.update_status_clan(up_status)
+
