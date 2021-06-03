@@ -77,3 +77,11 @@ class Clans:
         up_status = [status, self.chat_id]
         db.update_status_clan(up_status)
 
+
+
+class Users:
+
+    def __init__(self, user_id):
+        
+        self.user_id = user_id
+

@@ -1,6 +1,8 @@
 from config import bot
+from config import CAPTCHA_RANDOM_MAX
 from app import core
 from telebot import types
+import random
 
 #Обработка нажатия кнопки "Зарегистрировать клан"
 @bot.callback_query_handler(func=lambda call: call.data == "add_clan")
@@ -106,19 +108,29 @@ def active_user(call):
 #Обработка нажатия кнопки лайка
 @bot.callback_query_handler(func=lambda call: call.data == "add_like")
 def add_like(call):
-    
-    #Выбираем из JSON файла
-    like = call.message.json["reply_markup"]["inline_keyboard"][0][0]["text"].split("❤️")[1]
-    #Добавляем лайк
-    like = int(like) + 1
 
-    keyboard = types.InlineKeyboardMarkup(row_width=1)
-    button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
-    keyboard.add(button_like)
+    #Создаем рандомайзер для вывода лайк боксов
+    random_num = random.randint(1, CAPTCHA_RANDOM_MAX)
 
-    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=keyboard)
+    if random_num == 1:
+        
+        print("Пройди каптчу")
+        exit_like_box(call)
 
-    exit_like_box(call)
+    else:
+
+        #Выбираем из JSON файла
+        like = call.message.json["reply_markup"]["inline_keyboard"][0][0]["text"].split("❤️")[1]
+        #Добавляем лайк
+        like = int(like) + 1
+
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        button_like = types.InlineKeyboardButton(text="Поставить лайк ❤️ {}".format(str(like)), callback_data="add_like")
+        keyboard.add(button_like)
+
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=keyboard)
+
+        exit_like_box(call)
 
 
 def exit_like_box(call):
