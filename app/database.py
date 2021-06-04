@@ -7,7 +7,7 @@ class App_Db:
         
         try:
 
-            self.conn = connector.connect(host=DB_CONFIG[0], database=DB_CONFIG[1], user=DB_CONFIG[2], password=DB_CONFIG[3])
+            self.conn = connector.connect(host=DB_CONFIG[0], database=DB_CONFIG[1], user=DB_CONFIG[2], password=DB_CONFIG[3], charset="utf8")
             self.cursor = self.conn.cursor()
 
             if self.conn.is_connected():

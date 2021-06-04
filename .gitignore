@@ -1,5 +1,7 @@
 /config.py
 
 /bot_env/*
+/media/*
+
 /__pycache__/*
 /app/__pycache__/*

@@ -1,5 +1,4 @@
-from config import bot
-from config import CAPTCHA_RANDOM_MAX
+from config import bot, CAPTCHA_RANDOM_MAX
 from app import core
 from telebot import types
 import random
@@ -114,7 +113,7 @@ def add_like(call):
 
     if random_num == 1:
         
-        print("Пройди каптчу")
+        captcha(call)
         exit_like_box(call)
 
     else:
@@ -136,4 +135,25 @@ def add_like(call):
 def exit_like_box(call):
 
     bot.answer_callback_query(call.id)
+
     return
+
+
+def captcha(call):
+
+    captcha = core.Captcha(call.from_user.id)
+    audio_pack = captcha.get_captcha_construct()
+
+    #with open(audio_pack[0]) as audio:
+        #bot.send_audio(call.message.chat.id, audio)
+    
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
+
+    button_one = types.InlineKeyboardButton(text=audio_pack[1], callback_data="true")
+    button_two = types.InlineKeyboardButton(text=audio_pack[2], callback_data="false")
+    button_three = types.InlineKeyboardButton(text=audio_pack[3], callback_data="false")
+    button_four = types.InlineKeyboardButton(text=audio_pack[4], callback_data="false")
+
+    keyboard.add(button_one, button_two, button_three, button_four)
+
+    bot.send_message(call.message.chat.id, "Приветсвую тебя {}, пройди эту капчу что б я знал что ты не бот. Три бала за неверно пройденную капчу онулируют ваш баланс".format(str(call.from_user.first_name)), reply_markup=keyboard)

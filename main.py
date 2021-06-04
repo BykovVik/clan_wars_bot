@@ -1,8 +1,7 @@
 from os import link
 import time
 import random
-from config import bot
-from config import LIKE_BOX_RANDOM_MAX
+from config import bot, LIKE_BOX_RANDOM_MAX
 from telebot import types
 from telebot.util import async_dec
 from app import core

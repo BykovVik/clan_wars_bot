@@ -1,4 +1,6 @@
 from .database import App_Db
+import random
+from config import AUDIO_PATH, IMG_PATH
 
 
 #Клас содержащий в себе все базовые методы для работы приложения
@@ -84,4 +86,41 @@ class Users:
     def __init__(self, user_id):
         
         self.user_id = user_id
+
+
+
+class Captcha():
+
+    def __init__(self, user_id):
+
+        self.user_id = user_id
+        self.audio_path = [
+            AUDIO_PATH + '9.ogg',
+            AUDIO_PATH + '17.ogg',
+            AUDIO_PATH + '18.ogg',
+            AUDIO_PATH + '36.ogg',
+            AUDIO_PATH + '45.ogg',
+            AUDIO_PATH + '365.ogg',
+            AUDIO_PATH + '763.ogg',
+            AUDIO_PATH + '906.ogg'
+        ]
+
+    
+    def get_captcha_construct(self):
+
+        random_audio_path = random.choice(self.audio_path)
+
+        true_variant = random_audio_path.split(AUDIO_PATH)[1].split('.')[0]
+
+        audio_pack = [random_audio_path, true_variant]
+
+        while len(audio_pack) != 5:
+
+            num = random.randint(1, 999)
+
+            if num != true_variant:
+
+                audio_pack.append(num)
+
+        return audio_pack
 
