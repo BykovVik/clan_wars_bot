@@ -112,7 +112,7 @@ class Captcha():
 
         true_variant = random_audio_path.split(AUDIO_PATH)[1].split('.')[0]
 
-        audio_pack = [random_audio_path, true_variant]
+        audio_pack = [str(random_audio_path), true_variant]
 
         while len(audio_pack) != 5:
 

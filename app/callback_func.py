@@ -144,8 +144,7 @@ def captcha(call):
     captcha = core.Captcha(call.from_user.id)
     audio_pack = captcha.get_captcha_construct()
 
-    #with open(audio_pack[0]) as audio:
-        #bot.send_audio(call.message.chat.id, audio)
+    noize = open(audio_pack[0], 'rb')
     
     keyboard = types.InlineKeyboardMarkup(row_width=1)
 
@@ -157,3 +156,18 @@ def captcha(call):
     keyboard.add(button_one, button_two, button_three, button_four)
 
     bot.send_message(call.message.chat.id, "Приветсвую тебя {}, пройди эту капчу что б я знал что ты не бот. Три бала за неверно пройденную капчу онулируют ваш баланс".format(str(call.from_user.first_name)), reply_markup=keyboard)
+
+    bot.send_audio(call.message.chat.id, open(audio_pack[0], 'rb'))
+    bot.send_voice(call.message.chat.id, open(audio_pack[0], 'rb'))
+
+
+#Обработка нажатия кнопки верного ответа
+@bot.callback_query_handler(func=lambda call: call.data == "true")
+def true_captcha(call):
+    print(call)
+
+
+#Обработка нажатия кнопки НЕ верного ответа
+@bot.callback_query_handler(func=lambda call: call.data == "false")
+def false_captcha(call):
+    pass
