@@ -21,9 +21,15 @@ def add_clan(call):
 
         bot.send_message(call.message.chat.id, "Для полноценного функционирования игры, дайте боту ПРАВА АДМИНИСТРАТОРА")
         bot.delete_message(call.message.chat.id, call.message.message_id)
+
+        bot.answer_callback_query(call.id)
+        return
     else:
         bot.send_message(call.message.chat.id, "Клан уже зарегестрирован")
         bot.delete_message(call.message.chat.id, call.message.message_id)
+
+        bot.answer_callback_query(call.id)
+        return
 
 
 
@@ -31,15 +37,48 @@ def add_clan(call):
 @bot.callback_query_handler(func=lambda call: call.data == "add_user")
 def add_user(call):
 
-    #Вызываем класс с базовыми методами приложения
-    basic_methods = core.Core_Methods("chat", call.message.chat.id)
-    #Проверяем БД на наличие чата с таким id
-    check_chat = basic_methods.check_obj()
-    #Если проверка вернула нам пустой масив, регистриуем чат
-    if not check_chat:
-        bot.send_message(call.message.chat.id, "Для того что бы регистрировать юзера, не обходимо что б от вашего чата должен быть зарегестрирован клан.")
+    if call.message.chat.type == 'private':
+
+        #Вызываем класс с базовыми методами приложения
+        basic_methods = core.Core_Methods("user", call.from_user.id)
+        #Проверяем БД на наличие юзера с таким id
+        check_user = basic_methods.check_obj()
+
+        if not check_user:
+
+            bot.answer_callback_query(call.id, text="Зарегистрируй юзера в чате, за который ты хочешь играть")
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+            return
+
+        if check_user[0][1] == 0:
+
+            user = core.Users(call.from_user.id)
+            user.user_activation()
+
+        else:
+
+            bot.answer_callback_query(call.id, text="Аккаунт уже активирован")
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+            return
+            
+
+        bot.answer_callback_query(call.id, text="Активация аккаунта прошла успешно")
         bot.delete_message(call.message.chat.id, call.message.message_id)
+        return
+
     else:
+
+        #Вызываем класс с базовыми методами приложения
+        basic_methods = core.Core_Methods("chat", call.message.chat.id)
+        #Проверяем БД на наличие чата с таким id
+        check_chat = basic_methods.check_obj()
+        #Если проверка вернула нам пустой масив, регистриуем чат
+        if not check_chat:
+            bot.send_message(call.message.chat.id, "Для того что бы регистрировать юзера, не обходимо что б от вашего чата должен быть зарегестрирован клан.")
+            bot.answer_callback_query(call.id)
+            bot.delete_message(call.message.chat.id, call.message.message_id)
+            return
+        
         #Вызываем класс с базовыми методами приложения
         basic_methods_user = core.Core_Methods("user", call.from_user.id)
         #Проверяем БД на наличие юзера с таким id
@@ -48,15 +87,19 @@ def add_user(call):
         #Если проверка вернула нам пустой масив, регистриуем юзера
         if not check_user:
             #Собираем данные для создания юзера
-            new_user = [call.from_user.first_name, call.from_user.id, 0, 0, 0, check_chat[0][0]]
+            new_user = [0, call.from_user.first_name, call.from_user.id, 0, 0, 0, check_chat[0][0]]
             #регистрируем юзера
             basic_methods_user.reg_obj(new_user)
 
-            bot.send_message(call.message.chat.id, "Регистрация юзера под ником {} произошла успешно".format(str(call.from_user.first_name)))
+            bot.send_message(call.message.chat.id, "Для завершения регистрации юзера под ником {} , напишите боту в личку команду /start и Активируйте аакаунт соответсвуещей кнопкой".format(str(call.from_user.first_name)))
+
         else:
+
             bot.send_message(call.message.chat.id, "Юзер уже зарегестрирован")
 
+        bot.answer_callback_query(call.id)
         bot.delete_message(call.message.chat.id, call.message.message_id)
+        return
 
 
 #Обработка нажатия кнопки "Удалить клан"
@@ -71,10 +114,18 @@ def remove_clan(call):
     if not check_chat:
         bot.send_message(call.message.chat.id, "Ваш чат не зарегистрирован как клан в игре 'Clan Wars'")
         bot.delete_message(call.message.chat.id, call.message.message_id)
+
+        bot.answer_callback_query(call.id)
+        return
+
     else:
+
         basic_methods.del_obj()
         bot.send_message(call.message.chat.id, "Клан успешно удалён")
         bot.delete_message(call.message.chat.id, call.message.message_id)
+
+        bot.answer_callback_query(call.id)
+        return
 
 
 
@@ -89,12 +140,18 @@ def remove_user(call):
 
     #Если проверка вернула нам пустой масив, регистриуем юзера
     if not check_user:
+
         bot.send_message(call.message.chat.id, "У вас нет зарегистрированного юзера")
+
     else:
+
         basic_methods.del_obj()
         bot.send_message(call.message.chat.id, "Юзер успешно удалён")
 
     bot.delete_message(call.message.chat.id, call.message.message_id)
+
+    bot.answer_callback_query(call.id)
+    return
 
 
 #Обработка нажатия кнопки "Статистика игроков"
@@ -125,12 +182,14 @@ def add_like(call):
 
         #Ответ на клабэк запрос
         bot.answer_callback_query(call.id)
+        return
 
     #Если поле active_captcha не пусто, значит у юзера нет возможности ставить лайк
     if check_user[0][4] != 0:
 
         #Ответ на клабэк запрос
         bot.answer_callback_query(call.id)
+        return
 
     #Создаем рандомайзер для вывода лайк боксов
     random_num = random.randint(1, CAPTCHA_RANDOM_MAX)
@@ -161,7 +220,6 @@ def add_like(call):
 
         #Ответ на клабэк запрос
         bot.answer_callback_query(call.id)
-
 
 
 def captcha(call):
@@ -198,6 +256,7 @@ def true_captcha(call):
     #Ответ на клабэк запрос
     bot.answer_callback_query(call.id, text="Каптча пройдена успешно")
     bot.delete_message(call.from_user.id, call.message.message_id)
+    return
 
 
 #Обработка нажатия кнопки НЕ верного ответа
@@ -218,7 +277,10 @@ def false_captcha(call):
         user.update_items(0)
         #Ответ на клабэк запрос
         bot.answer_callback_query(call.id, text="ОШИБКА КАПТЧИ(количество: {}) Ваши очки онулированы".format(str(captcha_errors)))
+
+        bot.answer_callback_query(call.id)
         bot.delete_message(call.from_user.id, call.message.message_id)
+        return
 
     else:
 
@@ -228,4 +290,7 @@ def false_captcha(call):
         user.captcha_error_change(captcha_errors)
         #Ответ на клабэк запрос
         bot.answer_callback_query(call.id, text="ОШИБКА КАПТЧИ(количество: {})".format(str(captcha_errors)))
+
+        bot.answer_callback_query(call.id)
         bot.delete_message(call.from_user.id, call.message.message_id)
+        return

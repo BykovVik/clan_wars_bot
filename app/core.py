@@ -112,6 +112,14 @@ class Users:
         up_status = [update_item, self.user_id]
         db.update_user_item(up_status)
 
+    def user_activation(self):
+
+        db = App_Db()
+        up_status = [1, self.user_id]
+        db.activation_user(up_status)
+
+
+
 
 
 class Captcha():

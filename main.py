@@ -45,7 +45,13 @@ def help_message(message):
 
     if message.chat.type == 'private':
     
-        bot.send_message(message.chat.id, "Бот работает исключительно в чате")
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+        
+        button_reg_user = types.InlineKeyboardButton(text="Активировать юзера", callback_data="add_user")
+        button_del_user = types.InlineKeyboardButton(text="Удалить юзера", callback_data="remove_user")
+        keyboard.add(button_reg_user, button_del_user)
+        
+        bot.send_message(message.chat.id, "Правила игры", reply_markup=keyboard)
 
     else:
 
@@ -79,6 +85,10 @@ def check_chat_message(message):
 
     #Если проверка вернула нам пустой масив - завершаем функцию
     if not check_user:
+
+        return
+
+    if check_user[0][1] == 0:
 
         return
 

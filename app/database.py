@@ -54,7 +54,7 @@ class App_Db:
 
     def user_registration(self, new_user):
 
-        self.cursor.execute("INSERT INTO users(username, user_id, user_item, captcha_active, captcha_error, users_clan) VALUES(%s, %s, %s, %s, %s, %s)", new_user)
+        self.cursor.execute("INSERT INTO users(user_activation, username, user_id, user_item, captcha_active, captcha_error, users_clan) VALUES(%s, %s, %s, %s, %s, %s, %s)", new_user)
         self.conn.commit()
         self.conn.close()
 
@@ -77,9 +77,15 @@ class App_Db:
         self.conn.commit()
 
 
+    def activation_user(self, up_item):
+
+        self.cursor.execute("UPDATE users SET user_activation=%s WHERE user_id=%s", (up_item))
+        self.conn.commit()
+
+
     def get_user(self, user_id):
 
-        self.cursor.execute("SELECT id, username, user_id, user_item, captcha_active, captcha_error, users_clan FROM users WHERE user_id={}".format(str(user_id)))
+        self.cursor.execute("SELECT id, user_activation, username, user_id, user_item, captcha_active, captcha_error, users_clan FROM users WHERE user_id={}".format(str(user_id)))
         res = self.cursor.fetchall()
         self.conn.close()
 
