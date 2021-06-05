@@ -7,7 +7,7 @@ class App_Db:
         
         try:
 
-            self.conn = connector.connect(host=DB_CONFIG[0], database=DB_CONFIG[1], user=DB_CONFIG[2], password=DB_CONFIG[3], charset="utf8")
+            self.conn = connector.connect(host=DB_CONFIG[0], database=DB_CONFIG[1], user=DB_CONFIG[2], password=DB_CONFIG[3])
             self.cursor = self.conn.cursor()
 
             if self.conn.is_connected():
@@ -54,14 +54,32 @@ class App_Db:
 
     def user_registration(self, new_user):
 
-        self.cursor.execute("INSERT INTO users(username, user_id, user_item, users_clan) VALUES(%s,%s, %s, %s)", new_user)
+        self.cursor.execute("INSERT INTO users(username, user_id, user_item, captcha_active, captcha_error, users_clan) VALUES(%s, %s, %s, %s, %s, %s)", new_user)
         self.conn.commit()
         self.conn.close()
 
 
+    def update_status_captcha(self, up_captcha):
+
+        self.cursor.execute("UPDATE users SET captcha_active=%s WHERE user_id=%s", (up_captcha))
+        self.conn.commit()
+
+
+    def update_sum_captcha_error(self, up_captcha_error):
+
+        self.cursor.execute("UPDATE users SET captcha_error=%s WHERE user_id=%s", (up_captcha_error))
+        self.conn.commit()
+
+
+    def update_user_item(self, up_item):
+
+        self.cursor.execute("UPDATE users SET user_item=%s WHERE user_id=%s", (up_item))
+        self.conn.commit()
+
+
     def get_user(self, user_id):
 
-        self.cursor.execute("SELECT id, username, user_id, user_item, users_clan FROM users WHERE user_id={}".format(str(user_id)))
+        self.cursor.execute("SELECT id, username, user_id, user_item, captcha_active, captcha_error, users_clan FROM users WHERE user_id={}".format(str(user_id)))
         res = self.cursor.fetchall()
         self.conn.close()
 

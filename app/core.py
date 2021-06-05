@@ -87,6 +87,31 @@ class Users:
         
         self.user_id = user_id
 
+    def active_captcha_change(self, captcha_status):
+
+        db = App_Db()
+        up_status = [captcha_status, self.user_id]
+        db.update_status_captcha(up_status)
+
+    def captcha_error_change(self, error_status):
+
+        db = App_Db()
+        up_status = [error_status, self.user_id]
+        db.update_sum_captcha_error(up_status)
+
+    def get_sum_captcha_error(self):
+
+        db = App_Db()
+        res = db.get_user(self.user_id)
+
+        return res[0][5]
+
+    def update_items(self, update_item):
+
+        db = App_Db()
+        up_status = [update_item, self.user_id]
+        db.update_user_item(up_status)
+
 
 
 class Captcha():

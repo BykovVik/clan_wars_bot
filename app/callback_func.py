@@ -1,4 +1,4 @@
-from config import bot, CAPTCHA_RANDOM_MAX
+from config import bot, CAPTCHA_RANDOM_MAX, CAPTCHA_ERROR_MAX
 from app import core
 from telebot import types
 import random
@@ -13,8 +13,12 @@ def add_clan(call):
     check_chat = basic_methods.check_obj()
     #Если проверка вернула нам пустой масив, регистриуем чат
     if not check_chat:
+
+        #Собираем данные для создания клана
         new_clan = [call.message.chat.title, call.message.chat.id, 0, False]
+        #регистрируем клан
         basic_methods.reg_obj(new_clan)
+
         bot.send_message(call.message.chat.id, "Для полноценного функционирования игры, дайте боту ПРАВА АДМИНИСТРАТОРА")
         bot.delete_message(call.message.chat.id, call.message.message_id)
     else:
@@ -43,8 +47,11 @@ def add_user(call):
 
         #Если проверка вернула нам пустой масив, регистриуем юзера
         if not check_user:
-            new_user = [call.from_user.first_name, call.from_user.id, 0, check_chat[0][0]]
+            #Собираем данные для создания юзера
+            new_user = [call.from_user.first_name, call.from_user.id, 0, 0, 0, check_chat[0][0]]
+            #регистрируем юзера
             basic_methods_user.reg_obj(new_user)
+
             bot.send_message(call.message.chat.id, "Регистрация юзера под ником {} произошла успешно".format(str(call.from_user.first_name)))
         else:
             bot.send_message(call.message.chat.id, "Юзер уже зарегестрирован")
@@ -108,13 +115,36 @@ def active_user(call):
 @bot.callback_query_handler(func=lambda call: call.data == "add_like")
 def add_like(call):
 
+    #Вызываем класс с базовыми методами приложения
+    basic_methods = core.Core_Methods("user", call.from_user.id)
+    #Проверяем БД на наличие юзера с таким id
+    check_user = basic_methods.check_obj()
+
+    #Если проверка вернула нам пустой масив, регистриуем юзера
+    if not check_user:
+
+        #Ответ на клабэк запрос
+        bot.answer_callback_query(call.id)
+
+    #Если поле active_captcha не пусто, значит у юзера нет возможности ставить лайк
+    if check_user[0][4] != 0:
+
+        #Ответ на клабэк запрос
+        bot.answer_callback_query(call.id)
+
     #Создаем рандомайзер для вывода лайк боксов
     random_num = random.randint(1, CAPTCHA_RANDOM_MAX)
 
     if random_num == 1:
         
+        #Вызываем каптчу
         captcha(call)
-        exit_like_box(call)
+        #Создаем экземпляр класса User
+        user = core.Users(call.from_user.id)
+        #Ставим флаг означающий что наш пользователь сейчас занят разгадыванием каптчи
+        user.active_captcha_change(1)
+        #Ответ на клабэк запрос
+        bot.answer_callback_query(call.id)
 
     else:
 
@@ -129,22 +159,17 @@ def add_like(call):
 
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=keyboard)
 
-        exit_like_box(call)
+        #Ответ на клабэк запрос
+        bot.answer_callback_query(call.id)
 
-
-def exit_like_box(call):
-
-    bot.answer_callback_query(call.id)
-
-    return
 
 
 def captcha(call):
 
+    #Создаём экземляр класса каптчи
     captcha = core.Captcha(call.from_user.id)
+    #Формируем Аудио и варианты ответов для каптчи
     audio_pack = captcha.get_captcha_construct()
-
-    noize = open(audio_pack[0], 'rb')
     
     keyboard = types.InlineKeyboardMarkup(row_width=1)
 
@@ -155,19 +180,52 @@ def captcha(call):
 
     keyboard.add(button_one, button_two, button_three, button_four)
 
-    bot.send_message(call.message.chat.id, "Приветсвую тебя {}, пройди эту капчу что б я знал что ты не бот. Три бала за неверно пройденную капчу онулируют ваш баланс".format(str(call.from_user.first_name)), reply_markup=keyboard)
+    #Отсылаем каптчу в личные сообщения пользователю
+    bot.send_audio(call.from_user.id, open(audio_pack[0], 'rb'), reply_markup=keyboard)
 
-    bot.send_audio(call.message.chat.id, open(audio_pack[0], 'rb'))
-    bot.send_voice(call.message.chat.id, open(audio_pack[0], 'rb'))
+    #Оповещаем пользователя в чате о том, что ему нужно зайти в личные сообщения
+    bot.send_message(call.message.chat.id, "Приветсвую тебя {}, пройди эту капчу что б я знал что ты не бот. Три бала за неверно пройденную капчу онулируют ваш баланс".format(str(call.from_user.first_name)))
 
 
 #Обработка нажатия кнопки верного ответа
 @bot.callback_query_handler(func=lambda call: call.data == "true")
 def true_captcha(call):
-    print(call)
+    
+    #Создаем экземпляр класса User
+    user = core.Users(call.from_user.id)
+    #Ставим флаг, обозначающий что юзер НЕ занят капчей
+    user.active_captcha_change(0)
+    #Ответ на клабэк запрос
+    bot.answer_callback_query(call.id, text="Каптча пройдена успешно")
+    bot.delete_message(call.from_user.id, call.message.message_id)
 
 
 #Обработка нажатия кнопки НЕ верного ответа
 @bot.callback_query_handler(func=lambda call: call.data == "false")
 def false_captcha(call):
-    pass
+    
+    #Cоздаем экземпляр класса User
+    user = core.Users(call.from_user.id)
+    #Ставим флаг, обозначающий что юзер НЕ занят капчей
+    user.active_captcha_change(0)
+    #Получаем количество ошибок, допущщеных приразгадывании каптчи
+    captcha_errors = user.get_sum_captcha_error()
+
+    #Если количество ошибок достигло критической точки
+    if captcha_errors == CAPTCHA_ERROR_MAX:
+
+        #Онулируем очки юзера
+        user.update_items(0)
+        #Ответ на клабэк запрос
+        bot.answer_callback_query(call.id, text="ОШИБКА КАПТЧИ(количество: {}) Ваши очки онулированы".format(str(captcha_errors)))
+        bot.delete_message(call.from_user.id, call.message.message_id)
+
+    else:
+
+        #Добавляем только что допущенную ошибку
+        captcha_errors += 1
+        #Подсчитываем ошибки юзера
+        user.captcha_error_change(captcha_errors)
+        #Ответ на клабэк запрос
+        bot.answer_callback_query(call.id, text="ОШИБКА КАПТЧИ(количество: {})".format(str(captcha_errors)))
+        bot.delete_message(call.from_user.id, call.message.message_id)

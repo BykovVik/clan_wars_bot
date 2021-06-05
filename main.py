@@ -98,7 +98,9 @@ def check_chat_message(message):
 
         return
 
+    #Переменная, которая будет содержать количество лайков отображаемое на кнопке
     like = 0
+    #устанавливаем флан, оповещающий что в этом чате, в данный момент находиться лайк бокс
     chat.active_status_change(True)
 
     keyboard = types.InlineKeyboardMarkup(row_width=1)
@@ -109,10 +111,12 @@ def check_chat_message(message):
 
     send_mes = bot.send_message(message.chat.id, "Поддержи друга {} лайком".format(message.from_user.first_name), reply_markup=keyboard)
 
+    #создаём точку отсчета
     start = time.monotonic()
 
     while True:
 
+        #вычиляем необходимое время для завершения работы таймера
         if time.monotonic() - start > 20:
 
             chat.active_status_change(False)
