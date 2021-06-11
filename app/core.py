@@ -1,4 +1,4 @@
-from app.database import App_Db
+from app.db_queries import App_Db
 import random
 from app.config import AUDIO_PATH, IMG_PATH
 
@@ -39,9 +39,9 @@ class Core_Methods:
 
         elif self.target == "user":
 
-            user = (reg_object)
-            db.user_registration(user)
-
+            us = (reg_object)
+            print("Этоооооооо", us)
+            db.user_registration(us)
 
     #Удаляем объект из БД
     def del_obj(self):

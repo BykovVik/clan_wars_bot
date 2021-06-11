@@ -1,4 +1,4 @@
-from app.db import clan, user
+from app.db_table import clan, user
 from sqlalchemy import update, delete, select
 from app.config import db_engine
 
@@ -51,7 +51,7 @@ class App_Db:
 
     def user_registration(self, new_user):
 
-        insert = user.insert().values(
+        insert_user = user.insert().values(
             
             user_activation = new_user[0],
             username = new_user[1],
@@ -63,45 +63,75 @@ class App_Db:
         )
 
         conn = db_engine.connect()
-        conn.execute(insert)
+        conn.execute(insert_user)
 
 
+     
     def update_status_captcha(self, up_captcha):
 
-        self.cursor.execute("UPDATE users SET captcha_active=%s WHERE user_id=%s", (up_captcha))
-        self.conn.commit()
+        up = user.update().where(
+            user.c.user_id == up_captcha[1]
+        ).values(
+            captcha_active = up_captcha[0]
+        )
+
+        conn = db_engine.connect()
+        conn.execute(up)
 
 
     def update_sum_captcha_error(self, up_captcha_error):
 
-        self.cursor.execute("UPDATE users SET captcha_error=%s WHERE user_id=%s", (up_captcha_error))
-        self.conn.commit()
+        up = user.update().where(
+            user.c.user_id == up_captcha_error[1]
+        ).values(
+            captcha_error = up_captcha_error[0]
+        )
+
+        conn = db_engine.connect()
+        conn.execute(up)
 
 
     def update_user_item(self, up_item):
 
-        self.cursor.execute("UPDATE users SET user_item=%s WHERE user_id=%s", (up_item))
-        self.conn.commit()
+        up = user.update().where(
+            user.c.user_id == up_item[1]
+        ).values(
+            user_item = up_item[0]
+        )
+
+        conn = db_engine.connect()
+        conn.execute(up)
 
 
-    def activation_user(self, up_item):
+    def activation_user(self, up_active):
 
-        self.cursor.execute("UPDATE users SET user_activation=%s WHERE user_id=%s", (up_item))
-        self.conn.commit()
+        up = user.update().where(
+            user.c.user_id == up_active[1]
+        ).values(
+            user_activation = up_active[0]
+        )
+
+        conn = db_engine.connect()
+        conn.execute(up)
 
 
     def get_user(self, user_id):
 
-        self.cursor.execute("SELECT id, user_activation, username, user_id, user_item, captcha_active, captcha_error, users_clan FROM users WHERE user_id={}".format(str(user_id)))
-        res = self.cursor.fetchall()
-        self.conn.close()
+        select = user.select().where(user.c.user_id == user_id)
 
-        return res
+        conn = db_engine.connect()
+        res = conn.execute(select)
+
+        return res.fetchall()
 
 
     def delete_user(self, user_id):
 
-        self.cursor.execute("DELETE FROM users WHERE user_id={}".format(str(user_id)))
-        self.conn.commit()
-        self.conn.close()
+        del_obj = delete(user).where(
+            user.c.user_id == user_id
+        )
+
+        conn = db_engine.connect()
+        conn.execute(del_obj)
+
             

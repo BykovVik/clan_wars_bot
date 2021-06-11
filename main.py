@@ -1,6 +1,6 @@
 import time
 import random
-import app.db
+import app.db_table
 from app.config import bot, LIKE_BOX_RANDOM_MAX
 from telebot import types
 from telebot.util import async_dec
@@ -61,12 +61,32 @@ def test(message):
     #basic_methods.del_obj()
 
     
-    basic_methods = core.Core_Methods("chat", message.chat.id)
+    #basic_methods = core.Core_Methods("chat", message.chat.id)
     
-    check_chat = basic_methods.check_obj()
+    #check_chat = basic_methods.check_obj()
+
+    #print("Это чек чат", check_chat)
+
+    #new_clan = [message.chat.title, message.chat.id, 0, False]
+    #basic_methods.reg_obj(new_clan)
+
     #print("ЭТО ЧАТ ЧТАТУС", check_chat)
+
+    #def go_func(chat_num):
+
+        #basic_methods = core.Core_Methods("user", message.from_user.id)
     
-    new_user = [0, message.from_user.first_name, message.from_user.id, 0, 0, 0, check_chat[0][0]]
+        #new_user = [0, message.from_user.first_name, message.from_user.id, 0, 0, 0, chat_num]
+
+        #basic_methods.reg_obj(new_user)
+
+
+    #go_func(check_chat[0][0])
+
+    #Cоздаем экземпляр класса User
+    user = core.Users(message.from_user.id)
+    #Ставим флаг, обозначающий что юзер НЕ занят капчей
+    user.active_captcha_change(0)
     
 
 
