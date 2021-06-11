@@ -1,6 +1,6 @@
-from .database import App_Db
+from app.database import App_Db
 import random
-from config import AUDIO_PATH, IMG_PATH
+from app.config import AUDIO_PATH, IMG_PATH
 
 
 #Клас содержащий в себе все базовые методы для работы приложения

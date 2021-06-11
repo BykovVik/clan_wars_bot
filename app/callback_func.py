@@ -1,4 +1,4 @@
-from config import bot, CAPTCHA_RANDOM_MAX, CAPTCHA_ERROR_MAX
+from app.config import bot, CAPTCHA_RANDOM_MAX, CAPTCHA_ERROR_MAX
 from app import core
 from telebot import types
 import random

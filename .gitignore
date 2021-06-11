@@ -1,6 +1,6 @@
-/config.py
+/app/config.py
 
-/bot_env/*
+/my_env/*
 /media/*
 
 /__pycache__/*

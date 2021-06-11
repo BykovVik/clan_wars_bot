@@ -1,7 +1,7 @@
-from os import link
 import time
 import random
-from config import bot, LIKE_BOX_RANDOM_MAX
+import app.db
+from app.config import bot, LIKE_BOX_RANDOM_MAX
 from telebot import types
 from telebot.util import async_dec
 from app import core
@@ -37,6 +37,37 @@ def help_message(message):
 
     bot.send_message(message.chat.id, "Правила игры")
 
+
+
+@bot.message_handler(commands=['test'])
+def test(message):
+
+    #basic_methods = core.Core_Methods("chat", message.chat.id)
+
+    #new_clan = [message.chat.title, message.chat.id, 0, False]
+    #basic_methods.reg_obj(new_clan)
+
+
+
+
+    #chat = core.Clans(message.chat.id)
+    
+    #chat.active_status_change(False)
+
+
+
+    #basic_methods = core.Core_Methods("chat", message.chat.id)
+
+    #basic_methods.del_obj()
+
+    
+    basic_methods = core.Core_Methods("chat", message.chat.id)
+    
+    check_chat = basic_methods.check_obj()
+    #print("ЭТО ЧАТ ЧТАТУС", check_chat)
+    
+    new_user = [0, message.from_user.first_name, message.from_user.id, 0, 0, 0, check_chat[0][0]]
+    
 
 
 #Обработка команды /start
