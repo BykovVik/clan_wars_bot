@@ -1,5 +1,7 @@
 from app.db_queries import App_Db
+from app.config import bot
 import random
+import time
 from app.config import AUDIO_PATH, IMG_PATH
 
 
@@ -40,7 +42,6 @@ class Core_Methods:
         elif self.target == "user":
 
             us = (reg_object)
-            print("Этоооооооо", us)
             db.user_registration(us)
 
     #Удаляем объект из БД
@@ -156,4 +157,44 @@ class Captcha():
                 audio_pack.append(num)
 
         return audio_pack
+
+
+class Message_Timer():
+
+    def __init__(self, seconds, chat_id, message_id, target):
+
+        self.seconds = seconds
+        self.chat_id = chat_id
+        self.message_id = message_id
+        self.target = target
+
+    def get_timer(self):
+
+        #создаём точку отсчета
+        start = time.monotonic()
+
+        while True:
+
+            #вычиляем необходимое время для завершения работы таймера
+            if time.monotonic() - start > self.seconds:
+
+                if self.target == "captcha":
+
+                    db = App_Db()
+                    up_status = [False, self.chat_id]
+                    db.update_status_captcha(up_status)
+
+                if self.target == "like_box":
+
+                    db = App_Db()
+                    chat = Clans(chat.id)
+                    chat.active_status_change(False)
+
+
+                bot.delete_message(self.chat_id, self.message_id)
+                    
+                print("Отработал таймер на Капчике")
+
+
+
 

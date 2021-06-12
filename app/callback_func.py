@@ -185,7 +185,7 @@ def add_like(call):
         return
 
     #Если поле active_captcha не пусто, значит у юзера нет возможности ставить лайк
-    if check_user[0][4] != 0:
+    if check_user[0][5] != 0:
 
         #Ответ на клабэк запрос
         bot.answer_callback_query(call.id)
@@ -196,12 +196,12 @@ def add_like(call):
 
     if random_num == 1:
         
-        #Вызываем каптчу
-        captcha(call)
         #Создаем экземпляр класса User
         user = core.Users(call.from_user.id)
         #Ставим флаг означающий что наш пользователь сейчас занят разгадыванием каптчи
         user.active_captcha_change(1)
+        #Вызываем каптчу
+        captcha(call)
         #Ответ на клабэк запрос
         bot.answer_callback_query(call.id)
 
@@ -239,10 +239,13 @@ def captcha(call):
     keyboard.add(button_one, button_two, button_three, button_four)
 
     #Отсылаем каптчу в личные сообщения пользователю
-    bot.send_audio(call.from_user.id, open(audio_pack[0], 'rb'), reply_markup=keyboard)
+    audio_mes = bot.send_audio(call.from_user.id, open(audio_pack[0], 'rb'), reply_markup=keyboard)
 
     #Оповещаем пользователя в чате о том, что ему нужно зайти в личные сообщения
     bot.send_message(call.message.chat.id, "Приветсвую тебя {}, пройди эту капчу что б я знал что ты не бот. Три бала за неверно пройденную капчу онулируют ваш баланс".format(str(call.from_user.first_name)))
+
+    del_timer = core.Message_Timer(10, call.from_user.id, audio_mes.id, "captcha")
+    del_timer.get_timer()
 
 
 #Обработка нажатия кнопки верного ответа

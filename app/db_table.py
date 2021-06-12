@@ -21,7 +21,7 @@ user = Table("users", metadata,
     Column("user_item", Integer()),
     Column("captcha_active", Boolean()),
     Column("captcha_error", Integer()),
-    Column("users_clan", ForeignKey("clans.id"))
+    Column("users_clan", ForeignKey("clans.id", ondelete='CASCADE'))
 )
 
 

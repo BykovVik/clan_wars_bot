@@ -29,14 +29,14 @@ class App_Db:
 
     def update_status_clan(self, up_clan):
 
-        up = clan.update().where(
+        up_clan_status = clan.update().where(
             clan.c.chat_id == up_clan[1]
         ).values(
             chat_active = up_clan[0]
         )
 
         conn = db_engine.connect()
-        conn.execute(up)
+        conn.execute(up_clan_status)
 
 
     def delete_clan(self, chat_id):
@@ -65,18 +65,19 @@ class App_Db:
         conn = db_engine.connect()
         conn.execute(insert_user)
 
-
      
     def update_status_captcha(self, up_captcha):
 
-        up = user.update().where(
+        print("ЧТО ПРИШЛО", up_captcha)
+
+        up_captcha_stat = user.update().where(
             user.c.user_id == up_captcha[1]
         ).values(
             captcha_active = up_captcha[0]
         )
 
         conn = db_engine.connect()
-        conn.execute(up)
+        conn.execute(up_captcha_stat)
 
 
     def update_sum_captcha_error(self, up_captcha_error):
