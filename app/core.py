@@ -177,24 +177,29 @@ class Message_Timer():
 
             #вычиляем необходимое время для завершения работы таймера
             if time.monotonic() - start > self.seconds:
+                
+                try:
 
-                if self.target == "captcha":
+                    bot.delete_message(self.chat_id, self.message_id)
 
-                    db = App_Db()
-                    up_status = [False, self.chat_id]
-                    db.update_status_captcha(up_status)
+                    if self.target == "captcha":
 
-                if self.target == "like_box":
+                        db = App_Db()
+                        up_status = [False, self.chat_id]
+                        db.update_status_captcha(up_status)
 
-                    db = App_Db()
-                    chat = Clans(chat.id)
-                    chat.active_status_change(False)
+                    if self.target == "like_box":
 
+                        db = App_Db()
+                        up_status = [False, self.chat_id]
+                        db.update_status_clan(up_status)
 
-                bot.delete_message(self.chat_id, self.message_id)
+                    return
                     
-                print("Отработал таймер на Капчике")
 
-
+                except:
+                    
+                    print("Отработал таймер удаления кнопок")
+                    return
 
 

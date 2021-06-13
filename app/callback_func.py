@@ -200,10 +200,10 @@ def add_like(call):
         user = core.Users(call.from_user.id)
         #Ставим флаг означающий что наш пользователь сейчас занят разгадыванием каптчи
         user.active_captcha_change(1)
-        #Вызываем каптчу
-        captcha(call)
         #Ответ на клабэк запрос
         bot.answer_callback_query(call.id)
+        #Вызываем каптчу
+        captcha(call)
 
     else:
 
