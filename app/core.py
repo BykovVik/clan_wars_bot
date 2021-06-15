@@ -71,7 +71,7 @@ class Clans:
         db = App_Db()
         res = db.get_chat(self.chat_id)
 
-        return res[0][4]
+        return res[0].chat_active
 
 
     def active_status_change(self, status):

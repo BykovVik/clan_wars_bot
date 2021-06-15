@@ -65,8 +65,8 @@ def help_message(message):
         keyboard = types.InlineKeyboardMarkup(row_width=1)
         button_reg = types.InlineKeyboardButton(text="Зарегистрировать клан", callback_data="add_clan")
         button_reg_user = types.InlineKeyboardButton(text="Зарегистрировать юзера", callback_data="add_user")
-        button_active_user = types.InlineKeyboardButton(text="Статистика игроков", callback_data="remove_clan")
-        button_start_game = types.InlineKeyboardButton(text="Начать игру", callback_data="remove_clan")
+        button_active_user = types.InlineKeyboardButton(text="Статистика игроков", callback_data="user_stat")
+        button_start_game = types.InlineKeyboardButton(text="Начать игру", callback_data="war")
         button_del = types.InlineKeyboardButton(text="Удалить клан", callback_data="remove_clan")
         button_del_user = types.InlineKeyboardButton(text="Удалить юзера", callback_data="remove_user")
         keyboard.add(button_reg, button_reg_user, button_active_user, button_start_game, button_del, button_del_user)
@@ -95,7 +95,8 @@ def check_chat_message(message):
 
         return
 
-    if check_user[0][1] == 0:
+    
+    if check_user[0].user_activation == False:
 
         return
 

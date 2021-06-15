@@ -7,8 +7,8 @@ class App_Db:
     def clan_registration(self, new_chat):
 
         insert = clan.insert().values(
-            chat_name = new_chat[0],
-            chat_id = new_chat[1],
+            chat_id = new_chat[0],
+            chat_name = new_chat[1],
             chat_item = new_chat[2],
             chat_active = new_chat[3],
         )
@@ -67,8 +67,6 @@ class App_Db:
 
      
     def update_status_captcha(self, up_captcha):
-
-        print("ЧТО ПРИШЛО", up_captcha)
 
         up_captcha_stat = user.update().where(
             user.c.user_id == up_captcha[1]

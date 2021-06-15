@@ -1,5 +1,6 @@
 from app.config import bot, CAPTCHA_RANDOM_MAX, CAPTCHA_ERROR_MAX
-from app import core
+from app.general_check import Check_Callback_Functions
+from app.core import Core_Methods, Clans, Users
 from telebot import types
 import random
 
@@ -7,30 +8,35 @@ import random
 @bot.callback_query_handler(func=lambda call: call.data == "add_clan")
 def add_clan(call):
 
-    #Вызываем класс с базовыми методами приложения
-    basic_methods = core.Core_Methods("chat", call.message.chat.id)
-    #Проверяем БД на наличие чата с таким id
-    check_chat = basic_methods.check_obj()
-    #Если проверка вернула нам пустой масив, регистриуем чат
-    if not check_chat:
+    #Создаём объект класса осуществляющего необходимые проверки
+    checking_class = Check_Callback_Functions(call)
+    #Получаем проверку чата
+    result_chat = checking_class.check_clan("Для полноценного функционирования игры, дайте боту ПРАВА АДМИНИСТРАТОРА", "Клан уже зарегестрирован")
+    #Проверяем юзера на принадлежность к администрации
+    result_admin = checking_class.check_admin()
 
-        #Собираем данные для создания клана
-        new_clan = [call.message.chat.title, call.message.chat.id, 0, False]
-        #регистрируем клан
-        basic_methods.reg_obj(new_clan)
+    #Если юзер являеться администратором
+    if result_admin is True:
+        
+        #Если любая из проверок была провалена
+        if result_chat is False:
 
-        bot.send_message(call.message.chat.id, "Для полноценного функционирования игры, дайте боту ПРАВА АДМИНИСТРАТОРА")
-        bot.delete_message(call.message.chat.id, call.message.message_id)
 
-        bot.answer_callback_query(call.id)
+            #Вызываем класс с базовыми методами приложения
+            basic_methods = Core_Methods("chat", call.message.chat.id)
+            #Собираем данные для создания клана
+            new_clan = [call.message.chat.id, call.message.chat.title, 0, False]
+            #регистрируем клан
+            basic_methods.reg_obj(new_clan)
+
+            return
+
+    #Получаем проверку юзера
+    result_user = checking_class.check_user()
+    #Если любая из проверок была провалена
+    if result_user is False:
+
         return
-    else:
-        bot.send_message(call.message.chat.id, "Клан уже зарегестрирован")
-        bot.delete_message(call.message.chat.id, call.message.message_id)
-
-        bot.answer_callback_query(call.id)
-        return
-
 
 
 #Обработка нажатия кнопки "Зарегистрировать юзера"
@@ -39,37 +45,24 @@ def add_user(call):
 
     if call.message.chat.type == 'private':
 
-        #Вызываем класс с базовыми методами приложения
-        basic_methods = core.Core_Methods("user", call.from_user.id)
-        #Проверяем БД на наличие юзера с таким id
-        check_user = basic_methods.check_obj()
+        #Создаём объект класса осуществляющего необходимые проверки
+        checking_class = Check_Callback_Functions(call)
+        #Получаем проверку юзера
+        result_user = checking_class.check_user()
+        #Если любая из проверок была провалена
+        if result_user is False:
 
-        if not check_user:
+            user = Users(call.from_user.id)
+            user.user_activation()   
 
-            bot.answer_callback_query(call.id, text="Зарегистрируй юзера в чате, за который ты хочешь играть")
+            bot.answer_callback_query(call.id, text="Активация аккаунта прошла успешно")
             bot.delete_message(call.message.chat.id, call.message.message_id)
             return
-
-        if check_user[0][1] == 0:
-
-            user = core.Users(call.from_user.id)
-            user.user_activation()
-
-        else:
-
-            bot.answer_callback_query(call.id, text="Аккаунт уже активирован")
-            bot.delete_message(call.message.chat.id, call.message.message_id)
-            return
-            
-
-        bot.answer_callback_query(call.id, text="Активация аккаунта прошла успешно")
-        bot.delete_message(call.message.chat.id, call.message.message_id)
-        return
 
     else:
 
         #Вызываем класс с базовыми методами приложения
-        basic_methods = core.Core_Methods("chat", call.message.chat.id)
+        basic_methods = Core_Methods("chat", call.message.chat.id)
         #Проверяем БД на наличие чата с таким id
         check_chat = basic_methods.check_obj()
         #Если проверка вернула нам пустой масив, регистриуем чат
@@ -80,7 +73,7 @@ def add_user(call):
             return
         
         #Вызываем класс с базовыми методами приложения
-        basic_methods_user = core.Core_Methods("user", call.from_user.id)
+        basic_methods_user = Core_Methods("user", call.from_user.id)
         #Проверяем БД на наличие юзера с таким id
         check_user = basic_methods_user.check_obj()
 
@@ -106,26 +99,28 @@ def add_user(call):
 @bot.callback_query_handler(func=lambda call: call.data == "remove_clan")
 def remove_clan(call):
     
+    #Создаём объект класса осуществляющего необходимые проверки
+    checking_class = Check_Callback_Functions(call)
+    #Получаем проверку юзера
+    result_user = checking_class.check_user()
+    #Получаем проверку чата
+    result_chat = checking_class.check_clan("Ваш чат не зарегистрирован в игре", "Клан успешно удалён")
+
+    #Если любая из проверок была провалена
+    if result_user is False:
+
+        return
+
+    #Если любая из проверок была провалена
+    if result_chat is False:
+
+        return
+
     #Вызываем класс с базовыми методами приложения
-    basic_methods = core.Core_Methods("chat", call.message.chat.id)
-    #Проверяем БД на наличие чата с таким id
-    check_chat = basic_methods.check_obj()
-    #Если проверка вернула нам пустой масив, регистриуем чат
-    if not check_chat:
-        bot.send_message(call.message.chat.id, "Ваш чат не зарегистрирован как клан в игре 'Clan Wars'")
-        bot.delete_message(call.message.chat.id, call.message.message_id)
-
-        bot.answer_callback_query(call.id)
-        return
-
-    else:
-
-        basic_methods.del_obj()
-        bot.send_message(call.message.chat.id, "Клан успешно удалён")
-        bot.delete_message(call.message.chat.id, call.message.message_id)
-
-        bot.answer_callback_query(call.id)
-        return
+    basic_methods = Core_Methods("chat", call.message.chat.id)
+    basic_methods.del_obj()
+    
+    return
 
 
 
@@ -133,24 +128,20 @@ def remove_clan(call):
 @bot.callback_query_handler(func=lambda call: call.data == "remove_user")
 def remove_user(call):
 
-    #Вызываем класс с базовыми методами приложения
-    basic_methods = core.Core_Methods("user", call.from_user.id)
-    #Проверяем БД на наличие юзера с таким id
-    check_user = basic_methods.check_obj()
+    #Создаём объект класса осуществляющего необходимые проверки
+    check_user = Check_Callback_Functions(call)
+    #Получаем проверку юзера
+    res = check_user.check_user()
 
-    #Если проверка вернула нам пустой масив, регистриуем юзера
-    if not check_user:
+    #Если любая из проверок была провалена
+    if res is False:
 
-        bot.send_message(call.message.chat.id, "У вас нет зарегистрированного юзера")
+        return
 
-    else:
-
-        basic_methods.del_obj()
-        bot.send_message(call.message.chat.id, "Юзер успешно удалён")
-
+    basic_methods = Core_Methods("user", call.from_user.id)
+    basic_methods.del_obj()
     bot.delete_message(call.message.chat.id, call.message.message_id)
-
-    bot.answer_callback_query(call.id)
+    bot.answer_callback_query(call.id, "Юзер успешно удалён")
     return
 
 
@@ -158,14 +149,37 @@ def remove_user(call):
 @bot.callback_query_handler(func=lambda call: call.data == "active_user")
 def active_user(call):
     
-    pass
+    #Создаём объект класса осуществляющего необходимые проверки
+    check_user = Check_Callback_Functions(call)
+    #Получаем проверку юзера
+    res = check_user.check_user()
+
+    #Если любая из проверок была провалена
+    if res is False:
+
+        return
+
 
 
 #Обработка нажатия кнопки "Начать игру"
-@bot.callback_query_handler(func=lambda call: call.data == "start_game")
-def active_user(call):
+@bot.callback_query_handler(func=lambda call: call.data == "war")
+def start_game(call):
 
-    pass
+    #Создаём объект класса осуществляющего необходимые проверки
+    check_user = Check_Callback_Functions(call)
+    #Получаем проверку юзера
+    res = check_user.check_user()
+
+    #Если любая из проверок была провалена
+    if res is False:
+
+        return
+
+    bot.answer_callback_query(call.id, "Окээээээээээээээээээ")
+
+
+
+################################КАПТЧА И ЛАЙК БЛОК##################################
 
 
 #Обработка нажатия кнопки лайка
@@ -173,7 +187,7 @@ def active_user(call):
 def add_like(call):
 
     #Вызываем класс с базовыми методами приложения
-    basic_methods = core.Core_Methods("user", call.from_user.id)
+    basic_methods = Core_Methods("user", call.from_user.id)
     #Проверяем БД на наличие юзера с таким id
     check_user = basic_methods.check_obj()
 
@@ -197,7 +211,7 @@ def add_like(call):
     if random_num == 1:
         
         #Создаем экземпляр класса User
-        user = core.Users(call.from_user.id)
+        user = Users(call.from_user.id)
         #Ставим флаг означающий что наш пользователь сейчас занят разгадыванием каптчи
         user.active_captcha_change(1)
         #Ответ на клабэк запрос
@@ -225,7 +239,7 @@ def add_like(call):
 def captcha(call):
 
     #Создаём экземляр класса каптчи
-    captcha = core.Captcha(call.from_user.id)
+    captcha = Captcha(call.from_user.id)
     #Формируем Аудио и варианты ответов для каптчи
     audio_pack = captcha.get_captcha_construct()
     
@@ -244,7 +258,7 @@ def captcha(call):
     #Оповещаем пользователя в чате о том, что ему нужно зайти в личные сообщения
     bot.send_message(call.message.chat.id, "Приветсвую тебя {}, пройди эту капчу что б я знал что ты не бот. Три бала за неверно пройденную капчу онулируют ваш баланс".format(str(call.from_user.first_name)))
 
-    del_timer = core.Message_Timer(10, call.from_user.id, audio_mes.id, "captcha")
+    del_timer = Message_Timer(10, call.from_user.id, audio_mes.id, "captcha")
     del_timer.get_timer()
 
 
@@ -253,7 +267,7 @@ def captcha(call):
 def true_captcha(call):
     
     #Создаем экземпляр класса User
-    user = core.Users(call.from_user.id)
+    user = Users(call.from_user.id)
     #Ставим флаг, обозначающий что юзер НЕ занят капчей
     user.active_captcha_change(0)
     #Ответ на клабэк запрос
@@ -267,7 +281,7 @@ def true_captcha(call):
 def false_captcha(call):
     
     #Cоздаем экземпляр класса User
-    user = core.Users(call.from_user.id)
+    user = Users(call.from_user.id)
     #Ставим флаг, обозначающий что юзер НЕ занят капчей
     user.active_captcha_change(0)
     #Получаем количество ошибок, допущщеных приразгадывании каптчи
